@@ -1,0 +1,56 @@
+[
+  {
+    "id": 1,
+    "name": "Product 1",
+    "price": 43499,
+    "image": "/images/9a.jpg"
+  },
+  {
+    "id": 2,
+    "name": "Product 2",
+    "price": 4999,
+    "image": "/images/headset.jpg"
+  },
+  {
+    "id": 3,
+    "name": "Product 3",
+    "price": 2100,
+    "image": "/images/power bank.jpg"
+  },
+  {
+    "id": 4,
+    "name": "Product 4",
+    "price": 9999,
+    "image": "/images/headset.jpg"
+  },
+  {
+    "id": 5,
+    "name": "Product 5",
+    "price": 70999,
+    "image": "/images/9.jpg"
+  },
+  {
+    "id": 6,
+    "name": "Product 6",
+    "price": 69999,
+    "image": "/images/10.jpg"
+  },
+  {
+    "id": 7,
+    "name": "ajmal",
+    "price": 1000000,
+    "image": "images/9a.jpg"
+  },
+  {
+    "id": 8,
+    "name": "naveen",
+    "price": 55555,
+    "image": "/images/10.jpg"
+  },
+  {
+    "id": 9,
+    "name": "dcwdc",
+    "price": 55121,
+    "image": "/images/headset.jpg"
+  }
+]
