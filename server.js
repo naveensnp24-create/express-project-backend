@@ -207,14 +207,32 @@ createDB();
 
 app.use(express.json());      //middleware -> it is a process which is between request and respond
 app.use(cors({
-    origin: ['http://localhost:5173', 'https://your-vercel-app.vercel.app'],
-    credentials: true
+    origin: ['http://localhost:5173', 'https://inventory11-xi.vercel.app'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use("/products",productsRouter)
-app.use("/cart",authmiddleware,cartRouter)
+app.use("/cart",cartRouter)
 app.use("/students",studentsRouter)
 app.use("/auth",authRouter)
+
+app.get("/test-db", async (req, res) => {
+    try {
+        const mongoose = require('mongoose');
+        console.log('MongoDB connection state:', mongoose.connection.readyState);
+        // 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
+        
+        if (mongoose.connection.readyState === 1) {
+            res.json({ status: "Database connected", state: mongoose.connection.readyState });
+        } else {
+            res.status(500).json({ status: "Database not connected", state: mongoose.connection.readyState });
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
 
 app.get("/profile", authmiddleware, (req,res) => {
     res.status(200).json({ message: "Profile",userData:req.userData });
@@ -224,8 +242,6 @@ app.use((req,res,next)=>{
     console.log(`${req.method} ${req.url}`)
     next();                 //Pass to next middleware/route
 })
-app.use("/products",productsRouter);
-app.use('/cart', cartRouter);
 
 // app.use("/blogs",blogsRouter)
 

@@ -102,10 +102,9 @@ const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require('jsonwebtoken');
 
-
 const registerUser = async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, role } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -119,32 +118,30 @@ const registerUser = async (req, res) => {
     const user = await User.create({
       email,
       password: hashedPassword,
-      name,
+      role: role || 'user'
     });
-    res.status(201).json({message:"User created successfully",user});
+    res.status(201).json({message:"User created successfully", user: {id: user._id, email: user.email, role: user.role}});
 
   } catch (err) {
     res.status(400).json({
-      error: error.message,
+      error: err.message,
     });
   }
 };
 
 const loginUser = async (req,res) => {
     try{
-        const { email,password } = req.body;
+        const { email, password } = req.body;
         const user = await User.findOne({email});
-        if(!User) {
-            res.status(400).json({error:"User not found"});
-            return;
+        if(!user) {
+            return res.status(400).json({error:"User not found"});
         }
-        const isPasswordCorrect = await bcrypt.compare(password,user.password);
+        const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if(!isPasswordCorrect){
-            res.status(400).json({error:"Invalid Password"});
-            return;
+            return res.status(400).json({error:"Invalid Password"});
         }
-        const token = jwt.sign({id: user._id, email: user.email},process.env.SECRET_KEY, {expiresIn:'1h'});
-        res.status(200).json({message:"Login successfull",token});
+        const token = jwt.sign({id: user._id, email: user.email, role: user.role}, process.env.SECRET_KEY, {expiresIn:'1h'});
+        res.status(200).json({message:"Login successful", token, role: user.role});
     }catch(err){
         res.status(400).json({error:err.message});
     }

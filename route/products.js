@@ -1,48 +1,100 @@
 const express=require("express");
-const fs=require("fs");
+const Product=require("../models/Product");
+const authmiddleware = require("../middleware/authmiddleware");
+const fs = require("fs");
 const router=express.Router()
 
-
-
-
-router.get("/",(req,res) => {
-    const products=fs.readFileSync("data/products.json");
-    res.json(JSON.parse(products));
-});
-
-
-router.get("/:id",(req,res) => {
-    
-    console.log("id = ",req.params.id)
-    const products=JSON.parse(fs.readFileSync("data/products.json"));
-    const product = products.find((p) => {
-        return p.id === parseInt(req.params.id)
-    })
-    res.json(product);
-});
-
-router.post("/", (req, res) => {
-    const products = JSON.parse(fs.readFileSync("data/products.json"));
-    const newProduct = {
-        id:products[products.length-1].id+1,
-        name:req.body.name,
-        price:req.body.price,
-        image:req.body.image,
+router.get("/test", async (req, res) => {
+    try {
+        const testProduct = new Product({
+            name: "Test Product",
+            price: 100,
+            image: "test.jpg"
+        });
+        const saved = await testProduct.save();
+        res.json({message: "Test successful", product: saved});
+    } catch (error) {
+        res.status(500).json({error: error.message, stack: error.stack});
     }
-    const updatedProducts=[...products,newProduct];
-    fs.writeFileSync("data/products.json",JSON.stringify(updatedProducts,null,2));
-    res.status(201).json({message:"Product created successfuly"});
+});
 
+router.get("/", async (req,res) => {
+    try {
+        const products = await Product.find();
+        res.json(products);
+    } catch (error) {
+        console.log('Database error, using JSON fallback:', error.message);
+        try {
+            const productsData = fs.readFileSync("./data/products.json", "utf8");
+            res.json(JSON.parse(productsData));
+        } catch (fileError) {
+            res.status(500).json({error: "Failed to load products"});
+        }
+    }
+});
+
+router.get("/:id", async (req,res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) {
+            return res.status(404).json({error: "Product not found"});
+        }
+        res.json(product);
+    } catch (error) {
+        res.status(500).json({error: error.message});
+    }
+});
+
+router.post("/", authmiddleware, async (req, res) => {
+    try {
+        const newProduct = new Product({
+            name: req.body.name,
+            price: req.body.price,
+            image: req.body.image,
+            description: req.body.description,
+            stock: req.body.stock || 0
+        });
+        
+        const savedProduct = await newProduct.save();
+        res.status(201).json({message: "Product created successfully", product: savedProduct});
+    } catch (error) {
+        console.error('POST /products - Error:', error);
+        res.status(400).json({error: error.message});
+    }
 })
 
+router.delete("/:id", authmiddleware, async (req, res) => {
+    try {
+        const deletedProduct = await Product.findByIdAndDelete(req.params.id);
+        if (!deletedProduct) {
+            return res.status(404).json({error: "Product not found"});
+        }
+        res.status(200).json({ message: "Product deleted successfully" });
+    } catch (error) {
+        res.status(500).json({error: error.message});
+    }
+});
 
-
-router.delete("/:id", (req, res) => {
-    const data = fs.readFileSync("products.json", "utf8");
-    const products = JSON.parse(data);
-    const updatedProducts = products.filter(p => p.id !== parseInt(req.params.id));
-    fs.writeFileSync("products.json", JSON.stringify(updatedProducts, null, 2));
-    res.status(200).json({ message: "Product deleted successfully" });
+router.put("/:id", authmiddleware, async (req, res) => {
+    try {
+        const updatedProduct = await Product.findByIdAndUpdate(
+            req.params.id,
+            { 
+                name: req.body.name, 
+                price: req.body.price, 
+                image: req.body.image,
+                description: req.body.description,
+                stock: req.body.stock
+            },
+            { new: true }
+        );
+        if (!updatedProduct) {
+            return res.status(404).json({error: "Product not found"});
+        }
+        res.status(200).json({message: "Product updated successfully", product: updatedProduct});
+    } catch (error) {
+        res.status(400).json({error: error.message});
+    }
 });
 
 module.exports=router;
